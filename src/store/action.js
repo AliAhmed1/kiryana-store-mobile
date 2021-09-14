@@ -1,13 +1,13 @@
 import firebase from '../config/firebase';
-const db = firebase.firestore();
+import { firestore, auth , storage } from '../config/firebase';
 
 const update_user = () => {
     return (dispatch) => {
-        firebase.auth().onAuthStateChanged((user) => {
+        auth.onAuthStateChanged((user) => {
             if (user) {
                 // User is signed in.
                 // console.log("update_user =>>", user.uid)
-                db.collection('users').doc(user.uid).get().then((snapshot) => {
+                firestore.collection('users').doc(user.uid).get().then((snapshot) => {
                     // console.log("snapshot.data =>>", snapshot.data());
                     dispatch({
                         type: 'SET_USER',
@@ -24,7 +24,7 @@ const update_user = () => {
 
 const remove_user = () => {
     return (dispatch) => {
-        firebase.auth().signOut().then(() => {
+        auth.signOut().then(() => {
             // Sign-out successful.
             console.log("Successfully log out");
             dispatch({
@@ -41,7 +41,7 @@ const remove_user = () => {
 
 const store_list = () => {
     return (dispatch) => {
-        db.collection('users').onSnapshot(snapshot => {
+        firestore.collection('users').onSnapshot(snapshot => {
             const storeList = [];
             snapshot.forEach(doc => {
                 if (doc.data().isRestaurant) {
@@ -63,7 +63,7 @@ const order_request = () => {
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 // console.log("user uid => ", user.uid)
-                db.collection('users').doc(user.uid).collection("orderRequest").onSnapshot(snapshot => {
+                firestore.collection('users').doc(user.uid).collection("orderRequest").onSnapshot(snapshot => {
                     const orderRequest = [];
                     snapshot.forEach(doc => {
                         const obj = { id: doc.id, ...doc.data() }
@@ -82,10 +82,10 @@ const order_request = () => {
 
 const my_order = () => {
     return (dispatch) => {
-        firebase.auth().onAuthStateChanged((user) => {
+        auth.onAuthStateChanged((user) => {
             if (user) {
                 // console.log("user uid => ", user.uid)
-                db.collection('users').doc(user.uid).collection("myOrder").onSnapshot(snapshot => {
+                firestore.collection('users').doc(user.uid).collection("myOrder").onSnapshot(snapshot => {
                     const myOrder = [];
                     snapshot.forEach(doc => {
                         const obj = { id: doc.id, ...doc.data() }
@@ -107,7 +107,7 @@ const my_items = () => {
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 // console.log("user uid => ", user.uid)
-                db.collection('users').doc(user.uid).collection("menuItems").onSnapshot(snapshot => {
+                firestore.collection('users').doc(user.uid).collection("menuItems").onSnapshot(snapshot => {
                     const myItems = [];
                     snapshot.forEach(doc => {
                         const obj = { id: doc.id, ...doc.data() }

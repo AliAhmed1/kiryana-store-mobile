@@ -3,10 +3,10 @@ import { Keyboard, Text, View, TextInput, TouchableWithoutFeedback, Alert, Keybo
 
 
 
-const Home = () => {
+const MyItems = () => {
     return(
-        <Text>Home</Text>
+        <Text>MyItems</Text>
     )
 } 
 
-export default Home;
+export default MyItems;

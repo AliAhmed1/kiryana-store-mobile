@@ -1,5 +1,5 @@
 import * as firebase from 'firebase';
-import 'firebase/firestore'
+import "firebase/auth";
 import "firebase/database";
 import "firebase/firestore";
 import "firebase/storage";
@@ -12,30 +12,54 @@ var firebaseConfig = {
     messagingSenderId: "59433868327",
     appId: "1:59433868327:web:e96b23ce612fb7fb340202",
     measurementId: "G-1922BNNB80"
-  };
+};
 
 // Initialize Firebase
 
-let app;
+var app;
 if (firebase.apps.length === 0) {
-  app = firebase.initializeApp(firebaseConfig);
+    app = firebase.initializeApp(firebaseConfig);
 } else {
-  app = firebase.app();
+    app = firebase.app();
 }
 
 
-const db = firebase.firestore();
+const firestore = firebase.firestore();
+const auth = firebase.auth()
+const storage = firebase.storage()
+firestore.settings({ experimentalForceLongPolling: true, merge: true });
+
+// console.log(auth)
+
 
 function signUp(userDetails) {
-    return new Promise((resolve, reject) => {
-        const { userName, userEmail, userPassword, userCity, userCountry, userGender, userAge, userProfileImage, isRestaurant, typeOfFood } = userDetails;
-        firebase.auth().createUserWithEmailAndPassword(userDetails.userEmail, userDetails.userPassword).then((success) => {
-            let user = firebase.auth().currentUser;
+    const { userName, userEmail, userPassword, userCity, userCountry, userGender, userAge, userProfileImage, isRestaurant, typeOfFood, userMapLink, contentType } = userDetails;
+    const metadata = {
+        contentType: contentType
+    }
+    return new Promise(async (resolve, reject) => {
+        const blob = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.onload = function () {
+                resolve(xhr.response);
+            };
+            xhr.onerror = function () {
+                reject(new TypeError("Network request failed"));
+            };
+            xhr.responseType = "blob";
+            xhr.open("GET", userProfileImage, true);
+            xhr.send(null);
+        });
+
+        const filename = userProfileImage.substring(userProfileImage.lastIndexOf('/') + 1);
+
+        auth.createUserWithEmailAndPassword(userDetails.userEmail, userDetails.userPassword).then((success) => {
+            let user = auth.currentUser;
             var uid;
             if (user != null) {
                 uid = user.uid;
             };
-            firebase.storage().ref().child(`userProfileImage/${uid}/` + userProfileImage.name).put(userProfileImage).then((url) => {
+            storage.ref().child(`userProfileImage/${uid}/` + filename).put(blob, metadata).then((url) => {
                 url.ref.getDownloadURL().then((success) => {
                     const userProfileImageUrl = success
                     console.log(userProfileImageUrl)
@@ -52,15 +76,9 @@ function signUp(userDetails) {
                         userProfileImageUrl: userProfileImageUrl,
                         typeOfFood: typeOfFood,
                     }
-                    db.collection("users").doc(uid).set(userDetailsForDb).then((docRef) => {
+                    firestore.collection("users").doc(uid).set(userDetailsForDb).then((docRef) => {
                         // console.log("Document written with ID: ", docRef.id);
-                        if(userDetailsForDb.isRestaurant){
-                            userDetails.propsHistory.push("/order-requests");
-                            resolve(userDetailsForDb)
-                        }else{
-                            userDetails.propsHistory.push("/");
-                            resolve(userDetailsForDb)
-                        }
+                        resolve(userDetailsForDb)
                     }).catch(function (error) {
                         console.error("Error adding document: ", error);
                         reject(error)
@@ -90,16 +108,16 @@ function signUp(userDetails) {
 function logIn(userLoginDetails) {
     return new Promise((resolve, reject) => {
         const { userLoginEmail, userLoginPassword } = userLoginDetails;
-        firebase.auth().signInWithEmailAndPassword(userLoginEmail, userLoginPassword).then((success) => {
-            db.collection('users').doc(success.user.uid).get().then((snapshot) => {
+        auth.signInWithEmailAndPassword(userLoginEmail, userLoginPassword).then((success) => {
+            firestore.collection('users').doc(success.user.uid).get().then((snapshot) => {
                 console.log("snapshot.data =>>", snapshot.data().isRestaurant);
-                if(snapshot.data().isRestaurant){
-                    userLoginDetails.propsHistory.push("/order-requests");
+                if (snapshot.data().isRestaurant) {
+                    userLoginDetails.propsHistory.navigate("StoreNavigator");
                     resolve(success)
-                }else{
-                    userLoginDetails.propsHistory.push("/");
+                } else {
+                    userLoginDetails.propsHistory.push("UserNavigator");
                     resolve(success)
-                }             
+                }
             })
         }).catch((error) => {
             // Handle Errors here.
@@ -112,16 +130,16 @@ function logIn(userLoginDetails) {
 }
 
 function addItem(itemDetails) {
-    const { itemTitle, itemIngredients,itemSalePrice, itemPrice, itemImage, chooseItemType, } = itemDetails;
+    const { itemTitle, itemIngredients, itemSalePrice, itemPrice, itemImage, chooseItemType, } = itemDetails;
     return new Promise((resolve, reject) => {
-        let user = firebase.auth().currentUser;
+        let user = auth.currentUser;
         var uid;
         if (user != null) {
             uid = user.uid;
         };
         var imgId = Math.random()
         // console.log(imgId)
-        firebase.storage().ref().child(`itemImage/${uid}/` + itemImage.name + imgId).put(itemImage).then((url) => {
+        storage.ref().child(`itemImage/${uid}/` + itemImage.name + imgId).put(itemImage).then((url) => {
             url.ref.getDownloadURL().then((success) => {
                 const itemImageUrl = success
                 console.log(itemImageUrl)
@@ -134,7 +152,7 @@ function addItem(itemDetails) {
                     chooseItemType: chooseItemType,
                     // userUid: uid,
                 }
-                db.collection("users").doc(uid).collection("menuItems").add(itemDetailsForDb).then((docRef) => {
+                firestore.collection("users").doc(uid).collection("menuItems").add(itemDetailsForDb).then((docRef) => {
                     // console.log("Document written with ID: ", docRef.id);
                     // itemDetails.propsHistory.push("/my-foods");
                     resolve("Successfully added food item")
@@ -162,9 +180,9 @@ function addItem(itemDetails) {
     })
 }
 
-function orderNow(cartItemsList, totalPrice, totalActualPrice,resDetails, userDetails, history) {
+function orderNow(cartItemsList, totalPrice, totalActualPrice, resDetails, userDetails, history) {
     return new Promise((resolve, reject) => {
-        let user = firebase.auth().currentUser;
+        let user = auth.currentUser;
         var uid;
         if (user != null) {
             uid = user.uid;
@@ -173,7 +191,7 @@ function orderNow(cartItemsList, totalPrice, totalActualPrice,resDetails, userDe
         const myOrder = {
             itemsList: cartItemsList,
             totalPrice: totalPrice,
-            totalActualPrice : totalActualPrice,
+            totalActualPrice: totalActualPrice,
             status: "PENDING",
             ...resDetails,
         }
@@ -181,16 +199,16 @@ function orderNow(cartItemsList, totalPrice, totalActualPrice,resDetails, userDe
         const orderRequest = {
             itemsList: cartItemsList,
             totalPrice: totalPrice,
-            totalActualPrice : totalActualPrice,
+            totalActualPrice: totalActualPrice,
             status: "PENDING",
             ...userDetails,
         }
 
         // console.log("myOrder => ", myOrder)
         // console.log("orderRequest => ", orderRequest)
-        db.collection("users").doc(uid).collection("myOrder").add(myOrder).then((docRef) => {
+        firestore.collection("users").doc(uid).collection("myOrder").add(myOrder).then((docRef) => {
             // console.log(docRef.id)
-            db.collection("users").doc(resDetails.id).collection("orderRequest").doc(docRef.id).set(orderRequest).then((docRef) => {
+            firestore.collection("users").doc(resDetails.id).collection("orderRequest").doc(docRef.id).set(orderRequest).then((docRef) => {
                 // console.log("Document written with ID: ", docRef.id);
                 resolve('Successfully ordered')
                 // history.push("/my-orders");
@@ -207,6 +225,9 @@ function orderNow(cartItemsList, totalPrice, totalActualPrice,resDetails, userDe
 
 export default firebase;
 export {
+    firestore,
+    auth,
+    storage,
     signUp,
     logIn,
     addItem,

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 
 //Import all required component
 import { ActivityIndicator, View, StyleSheet, Image } from 'react-native';
+import { auth, firestore } from '../config/firebase'
 // import AsyncStorage from '@react-native-community/async-storage';
 
 const SplashScreen = props => {
@@ -12,16 +13,22 @@ const SplashScreen = props => {
   useEffect(() => {
     setTimeout(() => {
       setAnimating(false);
-      //Check if user_id is set or not
-      //If not then send for Authentication
-      //else send to Home Screen
-      // AsyncStorage.getItem('user_id').then(value =>
-      //   props.navigation.navigate(
-      //     value === null ? 'Auth' : 'DrawerNavigationRoutes'
-      //   )
-      // );
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          firestore.collection('users').doc(user.uid).get().then((snapshot) => {
+            if (snapshot.data().isRestaurant) {
+              props.navigation.reset({ routes: [{ name: "StoreNavigator" }] });
+            }
+            else{
+              props.navigation.reset({ routes: [{ name: "UserNavigator" }] });
 
-      props.navigation.navigate("LoginScreen")
+            }
+          })
+        } else {
+          props.navigation.reset({ routes: [{ name: "LoginScreen" }] });
+        }
+      });
+
     }, 5000);
   }, []);
 
