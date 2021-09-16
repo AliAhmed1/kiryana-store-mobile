@@ -21,7 +21,7 @@ import MyOrder from '../screens/MyOrder'
 import MyItems from '../screens/MyItems'
 import OrderRequest from '../screens/OrderRequest';
 import Dashboard from '../screens/Dashboard';
-import AddItems from '../screens/AddItems';
+import AddItems from '../screens/AddItems/AddItems';
 import StoreDetail from '../screens/StoreDetail';
 import UserPending from '../screens/MyOrder/UserPending';
 import UserInProgress from '../screens/MyOrder/UserInProgress'

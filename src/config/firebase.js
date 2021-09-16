@@ -130,8 +130,27 @@ function logIn(userLoginDetails) {
 }
 
 function addItem(itemDetails) {
-    const { itemTitle, itemIngredients, itemSalePrice, itemPrice, itemImage, chooseItemType, } = itemDetails;
-    return new Promise((resolve, reject) => {
+    const { itemTitle, itemIngredients, itemSalePrice, itemPrice, itemImage, chooseItemType, propsHistory, contentType } = itemDetails;
+    const metadata = {
+        contentType: contentType
+    }
+    return new Promise(async (resolve, reject) => {
+
+        const blob = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.onload = function () {
+                resolve(xhr.response);
+            };
+            xhr.onerror = function () {
+                reject(new TypeError("Network request failed"));
+            };
+            xhr.responseType = "blob";
+            xhr.open("GET", itemImage, true);
+            xhr.send(null);
+        });
+
+        const filename = itemImage.substring(itemImage.lastIndexOf('/') + 1);
+
         let user = auth.currentUser;
         var uid;
         if (user != null) {
@@ -139,7 +158,7 @@ function addItem(itemDetails) {
         };
         var imgId = Math.random()
         // console.log(imgId)
-        storage.ref().child(`itemImage/${uid}/` + itemImage.name + imgId).put(itemImage).then((url) => {
+        storage.ref().child(`itemImage/${uid}/` + imgId + filename).put(blob, metadata).then((url) => {
             url.ref.getDownloadURL().then((success) => {
                 const itemImageUrl = success
                 console.log(itemImageUrl)
@@ -153,9 +172,8 @@ function addItem(itemDetails) {
                     // userUid: uid,
                 }
                 firestore.collection("users").doc(uid).collection("menuItems").add(itemDetailsForDb).then((docRef) => {
-                    // console.log("Document written with ID: ", docRef.id);
-                    // itemDetails.propsHistory.push("/my-foods");
-                    resolve("Successfully added food item")
+                    console.log("Document written with ID: ", docRef.id);
+                    resolve("Successfully added item")
                 }).catch(function (error) {
                     let errorCode = error.code;
                     let errorMessage = error.message;
