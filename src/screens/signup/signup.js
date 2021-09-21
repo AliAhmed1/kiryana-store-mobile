@@ -54,41 +54,57 @@ function SignupScreen(props) {
         if (!userName.match(userNameFormate)) {
             setShowError(true)
             setRegisterFormError("Please enter a valid name.")
+            setLoading(false)
+
         } else if (!userEmail.match(userEmailFormate)) {
             setShowError(true)
             setRegisterFormError("Please enter a valid email address.")
             setUserEmail("")
+            setLoading(false)
 
         } else if (!userPassword.match(userPasswordFormate)) {
             setShowError(true)
             setRegisterFormError("For Password Use alphanumeric, uppercase, lowercase & greater than 10 characters.")
             SetUserPassword("")
+            setLoading(false)
+
         } else if (!userConfirmPassword.match(userPassword)) {
             setShowError(true)
             setRegisterFormError("Confirmation password not matched.")
             setUserConfirmPassword(false)
+            setLoading(false)
+
 
         } else if (!userCity.match(userCityFormate)) {
             setShowError(true)
             setRegisterFormError("Please enter a valid city name.")
             setUserCity("")
+            setLoading(false)
+
         } else if (!userCountry.match(userCountryFormate)) {
             setShowError(true)
             setRegisterFormError("Please enter a valid country name.")
             setUserCountry("")
+            setLoading(false)
 
         } else if (!(userAge > 0 && userAge < 101)) {
             setShowError(true)
             setRegisterFormError("Please enter a valid age.")
             setUserAge("")
+            setLoading(false)
+
         } else if (userProfileImage == null) {
             setShowError(true)
             setRegisterFormError("Please select a profile image.")
             setUserProfileImage(null)
+            setLoading(false)
+
         } else if (userMapLink.length < 10) {
             setShowError(true)
             setRegisterFormError("Please enter a valid URL.")
             setUserMapLink("")
+            setLoading(false)
+
         }
         else {
             // console.log(userName, userEmail, userPassword, userConfirmPassword, userCity, userCountry, userGender, userAge, userProfileImage, userTNC)

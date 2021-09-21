@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Icon } from 'react-native-elements';
 
 import { NavigationContainer, StackActions } from '@react-navigation/native';
@@ -9,7 +9,7 @@ import {
   createDrawerNavigator, DrawerContentScrollView,
   DrawerItemList,
 } from '@react-navigation/drawer';
-import { View, Platform, Text, ScrollView, Image, StyleSheet, NetInfo, ToastAndroid, SafeAreaView, DrawerItems } from 'react-native';
+import { View, Platform, Text, ScrollView, Image, StyleSheet, NetInfo, ToastAndroid, SafeAreaView, DrawerItems, useWindowDimensions } from 'react-native';
 
 import LoginScreen from '../screens/login/login'
 import SignupScreen from '../screens/signup/signup'
@@ -29,15 +29,75 @@ import UserDelivered from '../screens/MyOrder/UserDelivered'
 import StorePending from '../screens/OrderRequest/StorePending'
 import StoreInProgress from '../screens/OrderRequest/StoreInProgress'
 import StoreDelivered from '../screens/OrderRequest/StoreDelivered'
+import { Avatar } from 'react-native-elements';
+import { firestore, auth } from '../config/firebase';
 
-const CustomDrawerContentComponent = (props) => (
-  <DrawerContentScrollView {...props}>
-    <View style={{ flex: 1 }}>
-      <Image source={require('../assets/kiryanalogo1.png')} style={styles.drawerImage} />
+const Footer = () => {
+  const [userDetails, setUserDetails] = useState({})
+
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        // User is signed in.
+        // console.log("update_user =>>", user.uid)
+        firestore.collection('users').doc(user.uid).get().then((snapshot) => {
+          // console.log("snapshot.data =>>", snapshot.data());
+          setUserDetails(snapshot.data())
+          console.log(snapshot.data())
+
+        })
+      } else {
+        // No user is signed in.
+      }
+    });
+  }, [])
+
+  const window = useWindowDimensions()
+  return (
+    <View style={userDetails.isRestaurant ? {
+      marginTop: (window.height / 3), flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flex: 1,
+      margin: 20,
+    } : {
+      marginTop: (window.height / 2) - 70, flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      flex: 1,
+      margin: 20,
+    }}>
+      <Avatar
+        rounded
+        size={'medium'}
+        source={{
+          uri:
+            userDetails.userProfileImageUrl ? userDetails.userProfileImageUrl : 'https://s3.amazonaws.com/uifaces/faces/twitter/ladylexy/128.jpg',
+        }}
+      />
+      <Text style={{ fontWeight: 'bold', marginLeft: 5 }}>{userDetails.userName ? userDetails.userName : <Text>Anonymous</Text>}</Text>
     </View>
-    <DrawerItemList {...props} />
-  </DrawerContentScrollView>
-);
+  )
+}
+
+
+const CustomDrawerContentComponent = (props) => {
+  return (
+    <DrawerContentScrollView style={{ flex: 1, flexDirection: 'column', height: '100%', }} {...props}>
+      <View>
+        <View style={{ flex: 1 }}>
+          <Image source={require('../assets/kiryanalogo1.png')} style={styles.drawerImage} />
+        </View>
+        <View style={{ flex: 3 }}>
+          <DrawerItemList {...props} />
+        </View>
+      </View>
+      <View>
+        {<Footer />}
+      </View>
+    </DrawerContentScrollView>
+  )
+};
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
@@ -46,27 +106,27 @@ const Tab = createBottomTabNavigator();
 function UserOrderTab() {
   return (
     <Tab.Navigator
-    screenOptions={({ route }) => ({
-      tabBarIcon: ({ focused, color, size }) => {
-        let iconName;
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
 
-        if (route.name === 'Pending') {
-          iconName = focused
-            ? 'checkmark-done-outline'
-            : 'reload-outline';
-        } else if (route.name === 'In Progress') {
-          iconName = focused ? 'checkmark-done-outline' : 'swap-horizontal-outline';
-        }
-        else if (route.name === 'Delivered') {
-          iconName = focused ? 'checkmark-done-outline' : 'car-outline';
-        }
+          if (route.name === 'Pending') {
+            iconName = focused
+              ? 'checkmark-done-outline'
+              : 'reload-outline';
+          } else if (route.name === 'In Progress') {
+            iconName = focused ? 'checkmark-done-outline' : 'swap-horizontal-outline';
+          }
+          else if (route.name === 'Delivered') {
+            iconName = focused ? 'checkmark-done-outline' : 'car-outline';
+          }
 
-        // You can return any component that you like here!
-        return <Icon name={iconName} size={size} color={color} type='ionicon'/>;
-      },
-      tabBarActiveTintColor: 'tomato',
-      tabBarInactiveTintColor: 'gray',
-    })}
+          // You can return any component that you like here!
+          return <Icon name={iconName} size={size} color={color} type='ionicon' />;
+        },
+        tabBarActiveTintColor: 'tomato',
+        tabBarInactiveTintColor: 'gray',
+      })}
     >
       <Tab.Screen
         name="Pending"
@@ -81,27 +141,27 @@ function UserOrderTab() {
 function StoreOrderTab() {
   return (
     <Tab.Navigator
-    screenOptions={({ route }) => ({
-      tabBarIcon: ({ focused, color, size }) => {
-        let iconName;
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
 
-        if (route.name === 'Pending') {
-          iconName = focused
-            ? 'checkmark-done-outline'
-            : 'reload-outline';
-        } else if (route.name === 'In Progress') {
-          iconName = focused ? 'checkmark-done-outline' : 'swap-horizontal-outline';
-        }
-        else if (route.name === 'Delivered') {
-          iconName = focused ? 'checkmark-done-outline' : 'car-outline';
-        }
+          if (route.name === 'Pending') {
+            iconName = focused
+              ? 'checkmark-done-outline'
+              : 'reload-outline';
+          } else if (route.name === 'In Progress') {
+            iconName = focused ? 'checkmark-done-outline' : 'swap-horizontal-outline';
+          }
+          else if (route.name === 'Delivered') {
+            iconName = focused ? 'checkmark-done-outline' : 'car-outline';
+          }
 
-        // You can return any component that you like here!
-        return <Icon name={iconName} size={size} color={color} type='ionicon'/>;
-      },
-      tabBarActiveTintColor: 'tomato',
-      tabBarInactiveTintColor: 'gray',
-    })}
+          // You can return any component that you like here!
+          return <Icon name={iconName} size={size} color={color} type='ionicon' />;
+        },
+        tabBarActiveTintColor: 'tomato',
+        tabBarInactiveTintColor: 'gray',
+      })}
     >
       <Tab.Screen name="Pending" component={StorePending} options={{ headerShown: false }} />
       <Tab.Screen name="In Progress" component={StoreInProgress} options={{ headerShown: false }} />
@@ -137,8 +197,8 @@ function UserNavigator() {
           drawerLabel: 'Store',
           drawerIcon: ({ tintColor, focused }) => (
             <Icon
-              name='Store'
-              type='font-awesome'
+              name='storefront-outline'
+              type='ionicon'
               size={24}
               iconStyle={{ color: tintColor }}
             />
@@ -384,6 +444,13 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80
   },
+  avatarContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    flex: 1,
+    margin: 20,
+  }
 });
 
 export default AppContainer;

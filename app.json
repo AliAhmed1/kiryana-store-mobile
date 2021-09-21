@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "kiryana-store-mobile",
+    "name": "kiryana-store",
     "slug": "kiryana-store-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -23,7 +23,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "package": "com.hail.kiryana"
     },
     "web": {
       "favicon": "./assets/favicon.png"

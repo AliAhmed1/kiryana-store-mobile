@@ -198,7 +198,7 @@ function addItem(itemDetails) {
     })
 }
 
-function orderNow(cartItemsList, totalPrice, totalActualPrice, resDetails, userDetails, history) {
+function orderNow(cartItemsList, totalPrice, totalActualPrice, resDetails, userDetails) {
     return new Promise((resolve, reject) => {
         let user = auth.currentUser;
         var uid;

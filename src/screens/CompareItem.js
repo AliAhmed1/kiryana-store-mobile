@@ -52,28 +52,14 @@ const CompareItem = () => {
                     val.itemTitle.toLocaleLowerCase().indexOf(searchText.toLocaleLowerCase()) !== -1
 
             })
-            // console.log(result)
             if (searchText.length > 0) {
-                // this.setState({
-                //     renderCompareItems: true,
-                //     searchCompareItems: result,
-                //     searchText: searchText,
-                //     defaultSearchValue: searchText,
-                // })
                 setRenderCompareItems(true)
                 setSearchCompareItems(result)
                 setDefaultSearchValue(searchText)
             } else {
-                // this.setState({
-                //     renderCompareItems: false,
-                //     searchCompareItems: result,
-                //     searchText: searchText,
-                //     defaultSearchValue: searchText,
-                // })
                 setRenderCompareItems(false)
                 setSearchCompareItems(result)
                 setDefaultSearchValue(searchText)
-
             }
         }
     }
